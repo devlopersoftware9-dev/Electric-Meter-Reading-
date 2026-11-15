@@ -19,7 +19,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = MeterStore.instance;
     return Scaffold(
-      body: SafeArea(
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppColors.headerWash),
+        child: SafeArea(
         child: ListenableBuilder(
           listenable: store,
           builder: (context, _) {
@@ -35,21 +37,32 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           const Text('Assalam-o-Alaikum',
                               style: TextStyle(fontSize: 13, color: AppColors.muted)),
-                          Text('My Home', style: titleStyle(24)),
+                          Text('My Home', style: titleStyle(26)),
                         ],
                       ),
                     ),
                     Semantics(
                       label: 'Add meter',
                       button: true,
-                      child: Material(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(14),
-                        child: InkWell(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: AppColors.hero,
                           borderRadius: BorderRadius.circular(14),
-                          onTap: () => _openAdd(context),
-                          child: const SizedBox(
-                              width: 48, height: 48, child: Icon(Icons.add, color: Colors.white)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                                blurRadius: 12,
+                                offset: const Offset(0, 5)),
+                          ],
+                        ),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => _openAdd(context),
+                            child: const SizedBox(
+                                width: 48, height: 48, child: Icon(Icons.add, color: Colors.white)),
+                          ),
                         ),
                       ),
                     ),
@@ -70,13 +83,16 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  for (final m in meters)
-                    Padding(padding: const EdgeInsets.only(bottom: 12), child: _MeterCard(meter: m)),
+                  for (var i = 0; i < meters.length; i++)
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _MeterCard(meter: meters[i], accent: accentFor(i))),
                 ],
               ],
             );
           },
         ),
+      ),
       ),
     );
   }
@@ -91,7 +107,7 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.bolt_rounded, size: 48, color: AppColors.primary),
+            AccentIcon(accentFor(0), size: 64),
             const SizedBox(height: 12),
             Text('Add your first meter', style: titleStyle(18)),
             const SizedBox(height: 6),
@@ -101,7 +117,7 @@ class _EmptyState extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: AppColors.muted, height: 1.5),
             ),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: const Text('Add meter')),
+            GradientButton(onPressed: onAdd, child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add), SizedBox(width: 6), Text('Add meter')])),
           ],
         ),
       );
@@ -130,7 +146,17 @@ class _SummaryCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1D4ED8), Color(0xFF6D28D9), Color(0xFFBE185D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF6D28D9).withValues(alpha: 0.35), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -142,7 +168,7 @@ class _SummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Total this cycle · ${meters.length} meter${meters.length == 1 ? '' : 's'}',
-                        style: const TextStyle(fontSize: 13, color: AppColors.mutedOnDark)),
+                        style: const TextStyle(fontSize: 13, color: Color(0xFFE0E7FF))),
                     const SizedBox(height: 4),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -150,7 +176,7 @@ class _SummaryCard extends StatelessWidget {
                       children: [
                         Text(anyStats ? '$total' : '–', style: numStyle(44, color: Colors.white)),
                         const SizedBox(width: 6),
-                        const Text('units', style: TextStyle(fontSize: 15, color: AppColors.mutedOnDark)),
+                        const Text('units', style: TextStyle(fontSize: 15, color: Color(0xFFE0E7FF))),
                       ],
                     ),
                   ],
@@ -158,25 +184,25 @@ class _SummaryCard extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.navy2, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(12)),
                 child: Column(children: [
                   Text('$daysLeft', style: numStyle(22, color: AppColors.highlight)),
-                  const Text('days left', style: TextStyle(fontSize: 11, color: AppColors.mutedOnDark)),
+                  const Text('days left', style: TextStyle(fontSize: 11, color: Color(0xFFE0E7FF))),
                 ]),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Container(height: 1, color: AppColors.navyLine),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.25)),
           const SizedBox(height: 16),
           Row(children: [
-            Expanded(child: StatBlock('Next reading', fmtDate(next), labelColor: const Color(0xFF94A3B8), valueColor: Colors.white)),
+            Expanded(child: StatBlock('Next reading', fmtDate(next), labelColor: const Color(0xFFC7D2FE), valueColor: Colors.white)),
             Expanded(
                 child: StatBlock('Daily avg', anyStats ? '${fmtAvg(avg)} u/day' : '–',
-                    labelColor: const Color(0xFF94A3B8), valueColor: Colors.white)),
+                    labelColor: const Color(0xFFC7D2FE), valueColor: Colors.white)),
             Expanded(
                 child: StatBlock('Expected total', anyStats ? '≈ $projected u' : '–',
-                    labelColor: const Color(0xFF94A3B8), valueColor: AppColors.highlight)),
+                    labelColor: const Color(0xFFC7D2FE), valueColor: AppColors.highlight)),
           ]),
         ],
       ),
@@ -185,36 +211,37 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MeterCard extends StatelessWidget {
-  const _MeterCard({required this.meter});
+  const _MeterCard({required this.meter, required this.accent});
   final Meter meter;
+  final MeterAccent accent;
 
   @override
   Widget build(BuildContext context) {
     final s = meter.stats;
     final style = statusStyle(s?.status ?? SlabStatus.unknown);
-    return Material(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: accent.a.withValues(alpha: 0.14), blurRadius: 18, offset: const Offset(0, 6))],
+      ),
+      child: ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => MeterDetailScreen(meterId: meter.id))),
-        child: Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          Container(height: 6, decoration: BoxDecoration(gradient: accent.gradient)),
+          Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.bolt_rounded, color: AppColors.primary),
-                ),
+                AccentIcon(accent),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -237,7 +264,7 @@ class _MeterCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text(s == null ? '–' : '${s.units}', style: numStyle(30)),
+                        Text(s == null ? '–' : '${s.units}', style: numStyle(32, color: accent.a)),
                         const SizedBox(width: 4),
                         const Text('units so far', style: TextStyle(fontSize: 13, color: AppColors.muted)),
                       ],
@@ -262,8 +289,8 @@ class _MeterCard extends StatelessWidget {
                 height: 44,
                 child: TextButton.icon(
                   style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFF1F5F9),
-                    foregroundColor: AppColors.ink,
+                    backgroundColor: accent.tint,
+                    foregroundColor: accent.a,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
@@ -275,7 +302,11 @@ class _MeterCard extends StatelessWidget {
               ),
             ],
           ),
+          ),
+          ],
         ),
+      ),
+      ),
       ),
     );
   }

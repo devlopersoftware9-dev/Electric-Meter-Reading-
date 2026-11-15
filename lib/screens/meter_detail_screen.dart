@@ -59,9 +59,11 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
         if (m == null) return const Scaffold();
         final s = m.stats;
         final latest = m.latestReading;
+        final accent = accentFor(MeterStore.instance.meters.indexOf(m));
         return Scaffold(
           appBar: AppBar(
             titleSpacing: 0,
+            backgroundColor: accent.tint.withValues(alpha: 0.06),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -82,7 +84,7 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
-            backgroundColor: AppColors.primary,
+            backgroundColor: accent.a,
             foregroundColor: Colors.white,
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => ScanScreen(meterId: m.id))),
@@ -114,7 +116,7 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(gradient: accent.gradient, borderRadius: BorderRadius.circular(14)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -122,7 +124,7 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
                           latest == null
                               ? 'Units used'
                               : 'Units used (${latest.date.difference(m.cycleStart).inDays} days)',
-                          style: const TextStyle(fontSize: 14, color: AppColors.mutedOnDark),
+                          style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
                         ),
                         Text(s == null ? '–' : '${s.units}', style: numStyle(26, color: Colors.white)),
                       ],
@@ -145,7 +147,7 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    HistoryChart(history: m.history, forecast: s?.projected),
+                    HistoryChart(history: m.history, forecast: s?.projected, accent: accent),
                   ],
                 ),
               ),

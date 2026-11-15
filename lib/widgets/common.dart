@@ -34,6 +34,74 @@ StatusStyle statusStyle(SlabStatus s) {
   }
 }
 
+/// Main call-to-action button with the brand gradient.
+class GradientButton extends StatelessWidget {
+  const GradientButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+    this.gradient = AppColors.hero,
+    this.height = 52,
+  });
+  final VoidCallback? onPressed;
+  final Widget child;
+  final Gradient gradient;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(14);
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      child: Opacity(
+        opacity: onPressed == null ? 0.45 : 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: radius,
+            boxShadow: onPressed == null
+                ? null
+                : [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.30), blurRadius: 14, offset: const Offset(0, 6))],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: radius,
+              onTap: onPressed,
+              child: SizedBox(
+                height: height,
+                child: Center(
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                    child: IconTheme.merge(data: const IconThemeData(color: Colors.white), child: child),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rounded square with a gradient and a white bolt icon.
+class AccentIcon extends StatelessWidget {
+  const AccentIcon(this.accent, {super.key, this.size = 44, this.icon = Icons.bolt_rounded});
+  final MeterAccent accent;
+  final double size;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(gradient: accent.gradient, borderRadius: BorderRadius.circular(size * 0.3)),
+        child: Icon(icon, color: Colors.white, size: size * 0.55),
+      );
+}
+
 class AppCard extends StatelessWidget {
   const AppCard({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.color, this.borderColor});
   final Widget child;
@@ -156,9 +224,10 @@ class WarningBox extends StatelessWidget {
 
 /// 12-month usage bars with a dashed-looking 200 line; the last bar can be the forecast.
 class HistoryChart extends StatelessWidget {
-  const HistoryChart({super.key, required this.history, this.forecast});
+  const HistoryChart({super.key, required this.history, this.forecast, this.accent});
   final List<MonthUsage> history;
   final int? forecast;
+  final MeterAccent? accent;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +244,8 @@ class HistoryChart extends StatelessWidget {
       );
     }
     const h = 150.0;
+    final barA = accent?.a ?? AppColors.primary;
+    final barB = accent?.b ?? const Color(0xFF7C3AED);
     final maxV = shown.fold<int>(220, (m, e) => e.units > m ? e.units : m).toDouble();
     final slabY = 200 / maxV * h;
 
@@ -194,7 +265,15 @@ class HistoryChart extends StatelessWidget {
                         child: Container(
                           height: e.units / maxV * h,
                           decoration: BoxDecoration(
-                            color: e.isForecast ? AppColors.amber : AppColors.primary,
+                            gradient: e.isForecast
+                                ? const LinearGradient(
+                                    colors: [AppColors.amber, AppColors.highlight],
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter)
+                                : LinearGradient(
+                                    colors: [barA, barB],
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter),
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                           ),
                         ),
@@ -229,8 +308,8 @@ class HistoryChart extends StatelessWidget {
             ),
         ]),
         const SizedBox(height: 10),
-        const Row(children: [
-          _Legend(AppColors.primary, 'Billed units'),
+        Row(children: [
+          _Legend(barA, 'Billed units'),
           SizedBox(width: 14),
           _Legend(AppColors.amber, 'This month (forecast)'),
         ]),

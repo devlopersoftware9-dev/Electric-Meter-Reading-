@@ -239,7 +239,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     flex: 2,
-                    child: FilledButton(
+                    child: GradientButton(
                       onPressed: _busy || v == null ? null : () => _save(m),
                       child: const Text('Save reading'),
                     ),
