@@ -1,6 +1,8 @@
 import 'package:bijli_meter/models/meter.dart';
 import 'package:bijli_meter/services/bill_service.dart';
 import 'package:bijli_meter/services/ocr_service.dart';
+import 'package:bijli_meter/widgets/ref_formatter.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _sampleBill = '''
@@ -49,5 +51,18 @@ void main() {
     expect(s.units, 152);
     expect(s.daysRemaining, 12);
     expect(s.projected, greaterThan(200));
+  });
+
+  test('reference number gets spaces automatically', () {
+    final f = RefNumberFormatter();
+    TextEditingValue type(String old, String text) => f.formatEditUpdate(
+        TextEditingValue(text: old, selection: TextSelection.collapsed(offset: old.length)),
+        TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length)));
+    expect(type('', '07112341234567').text, '07 11234 1234567');
+    expect(type('07 1123', '07 11234').text, '07 11234');
+    expect(type('07 11234', '07 112341').text, '07 11234 1');
+    expect(type('07 11234 1234567', '07 11234 12345678').text, '07 11234 1234567');
+    // Backspace right after a space removes the digit before it.
+    expect(type('07 1', '07 ').text, '07');
   });
 }

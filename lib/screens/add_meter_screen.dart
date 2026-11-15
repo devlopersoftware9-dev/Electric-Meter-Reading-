@@ -6,6 +6,7 @@ import '../services/bill_service.dart';
 import '../services/meter_store.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/ref_formatter.dart';
 
 class AddMeterScreen extends StatefulWidget {
   const AddMeterScreen({super.key});
@@ -108,16 +109,24 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
           TextField(
             controller: _ref,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(14)],
-            style: numStyle(20, weight: FontWeight.w600),
-            decoration: const InputDecoration(hintText: '07 11234 1234567'),
+            inputFormatters: [RefNumberFormatter()],
+            style: numStyle(20, weight: FontWeight.w600).copyWith(letterSpacing: 1),
+            decoration: InputDecoration(
+              hintText: '07 11234 1234567',
+              suffixText: '${_cleanRef.length}/14',
+              suffixStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _cleanRef.length == 14 ? AppColors.success : AppColors.muted,
+              ),
+            ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 6),
-          const Text('Printed at the top of your electricity bill.',
+          const Text('Sirf digits likhein, spaces khud lag jayengi.',
               style: TextStyle(fontSize: 12, color: AppColors.muted)),
           const SizedBox(height: 16),
-          FilledButton(
+          GradientButton(
             onPressed: _loading ? null : _find,
             child: _loading
                 ? const SizedBox(
@@ -160,7 +169,7 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
             const SizedBox(height: 16),
           ],
           const SizedBox(height: 8),
-          FilledButton(onPressed: _canSave ? _save : null, child: const Text('Save meter')),
+          GradientButton(onPressed: _canSave ? _save : null, child: const Text('Save meter')),
         ],
       ),
     );
