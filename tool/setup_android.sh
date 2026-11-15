@@ -27,4 +27,11 @@ cat > android/app/proguard-rules.pro <<'EOF'
 -dontwarn com.google.mlkit.vision.text.korean.**
 EOF
 
+# Android lint crashes on some plugin sources during release builds; skip it.
+for GRADLE in android/app/build.gradle.kts android/app/build.gradle; do
+  if [ -f "$GRADLE" ] && ! grep -q 'checkReleaseBuilds' "$GRADLE"; then
+    printf '\nandroid {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }\n}\n' >> "$GRADLE"
+  fi
+done
+
 echo "Android project ready."
