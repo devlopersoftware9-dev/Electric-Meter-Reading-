@@ -18,4 +18,13 @@ if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
 fi
 sed -i 's/android:label="bijli_meter"/android:label="Bijli Meter"/' "$MANIFEST"
 
+# ML Kit references optional language packs (Chinese, Japanese, ...) that the
+# app does not bundle; tell R8 not to fail on them.
+cat > android/app/proguard-rules.pro <<'EOF'
+-dontwarn com.google.mlkit.vision.text.chinese.**
+-dontwarn com.google.mlkit.vision.text.devanagari.**
+-dontwarn com.google.mlkit.vision.text.japanese.**
+-dontwarn com.google.mlkit.vision.text.korean.**
+EOF
+
 echo "Android project ready."
