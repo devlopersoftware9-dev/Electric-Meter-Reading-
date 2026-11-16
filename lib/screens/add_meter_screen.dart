@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/meter.dart';
 import '../services/bill_service.dart';
 import '../services/meter_store.dart';
+import '../services/ocr_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/ref_formatter.dart';
@@ -24,13 +26,76 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
   bool _loading = false;
   String? _error;
   bool _manual = false;
+  bool _scanning = false;
+  OcrService? _ocr;
 
   @override
   void dispose() {
     _name.dispose();
     _ref.dispose();
     _manualReading.dispose();
+    _ocr?.dispose();
     super.dispose();
+  }
+
+  /// Take (or pick) a photo of the bill and read the 14-digit reference from it.
+  Future<void> _scanRef() async {
+    FocusScope.of(context).unfocus();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text('Bill se reference scan karein', style: titleStyle(18)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: const Text('Camera se photo lein'),
+            onTap: () => Navigator.pop(c, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Gallery se bill chunein'),
+            onTap: () => Navigator.pop(c, ImageSource.gallery),
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+    if (source == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    XFile? file;
+    try {
+      file = await ImagePicker().pickImage(source: source, maxWidth: 2400, imageQuality: 92);
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Camera nahi khul saka.')));
+      return;
+    }
+    if (file == null) return;
+    setState(() => _scanning = true);
+    try {
+      _ocr ??= OcrService();
+      final ref = await _ocr!.readReference(file.path);
+      if (!mounted) return;
+      if (ref == null) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text('Reference number nahi mila. Bill ka upar wala hissa saaf photo mein lein, ya khud likhein.')));
+      } else {
+        _ref.value = TextEditingValue(text: ref, selection: TextSelection.collapsed(offset: ref.length));
+        setState(() {
+          _error = null;
+          _bill = null;
+        });
+        messenger.showSnackBar(SnackBar(content: Text('Reference mil gaya: $ref')));
+        await _find();
+      }
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Photo parhi nahi ja saki. Dobara koshish karein.')));
+    } finally {
+      if (mounted) setState(() => _scanning = false);
+    }
   }
 
   String get _cleanRef => BillService.cleanRef(_ref.text);
@@ -108,11 +173,21 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _ref,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.characters,
+            autocorrect: false,
+            enableSuggestions: false,
             inputFormatters: [RefNumberFormatter()],
             style: numStyle(20, weight: FontWeight.w600).copyWith(letterSpacing: 1),
             decoration: InputDecoration(
-              hintText: '07 11234 1234567',
+              hintText: '07 11234 1234567 U',
+              suffixIcon: IconButton(
+                tooltip: 'Bill se scan karein',
+                onPressed: _scanning || _loading ? null : _scanRef,
+                icon: _scanning
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.document_scanner_outlined, color: AppColors.primary),
+              ),
               suffixText: '${_cleanRef.length}/14',
               suffixStyle: TextStyle(
                 fontSize: 13,
@@ -123,9 +198,17 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 6),
-          const Text('Sirf digits likhein, spaces khud lag jayengi.',
+          const Text('Digits likhein, spaces khud lag jayengi. Aakhir mein U/R ho to woh bhi likh sakte hain.',
               style: TextStyle(fontSize: 12, color: AppColors.muted)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _scanning || _loading ? null : _scanRef,
+            icon: _scanning
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.document_scanner_outlined),
+            label: Text(_scanning ? 'Bill parh rahe hain…' : 'Bill ki photo se scan karein'),
+          ),
+          const SizedBox(height: 12),
           GradientButton(
             onPressed: _loading ? null : _find,
             child: _loading
