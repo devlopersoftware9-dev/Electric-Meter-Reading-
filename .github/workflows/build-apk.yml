@@ -24,6 +24,11 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Use the fixed signing key
+        # Without this, every CI run makes a new random key and Android
+        # refuses to install the new APK over the old one.
+        run: mkdir -p ~/.android && cp tool/signing/debug.keystore ~/.android/debug.keystore
+
       - name: Generate Android project
         run: bash tool/setup_android.sh
 

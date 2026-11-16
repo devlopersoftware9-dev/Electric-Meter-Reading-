@@ -19,3 +19,6 @@ android/.gradle/
 android/key.properties
 *.keystore
 *.jks
+
+# Fixed signing key so every APK can update the installed app
+!tool/signing/debug.keystore
