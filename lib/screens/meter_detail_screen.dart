@@ -5,6 +5,7 @@ import '../services/bill_service.dart';
 import '../services/meter_store.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'bill_lookup_screen.dart';
 import 'scan_screen.dart';
 
 class MeterDetailScreen extends StatefulWidget {
@@ -19,17 +20,14 @@ class _MeterDetailScreenState extends State<MeterDetailScreen> {
   bool _refreshing = false;
 
   Future<void> _refresh(Meter m) async {
-    setState(() => _refreshing = true);
     final messenger = ScaffoldMessenger.of(context);
-    try {
-      final bill = await BillService().fetch(m.ref, knownCompany: m.company);
-      await MeterStore.instance.applyBill(m, bill);
-      messenger.showSnackBar(const SnackBar(content: Text('Updated from the bill website')));
-    } on BillException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } finally {
-      if (mounted) setState(() => _refreshing = false);
-    }
+    final bill = await Navigator.push<BillData>(
+      context,
+      MaterialPageRoute(builder: (_) => BillLookupScreen(ref: m.ref, company: m.company)),
+    );
+    if (bill == null) return;
+    await MeterStore.instance.applyBill(m, bill);
+    messenger.showSnackBar(const SnackBar(content: Text('Bill website se update ho gaya')));
   }
 
   Future<void> _delete(Meter m) async {

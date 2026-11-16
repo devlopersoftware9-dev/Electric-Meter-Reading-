@@ -9,6 +9,7 @@ import '../services/ocr_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/ref_formatter.dart';
+import 'bill_lookup_screen.dart';
 
 class AddMeterScreen extends StatefulWidget {
   const AddMeterScreen({super.key});
@@ -107,27 +108,29 @@ class _AddMeterScreenState extends State<AddMeterScreen> {
       return;
     }
     setState(() {
-      _loading = true;
       _error = null;
       _bill = null;
     });
-    try {
-      final bill = await BillService().fetch(_cleanRef);
-      if (!mounted) return;
-      setState(() {
+    final bill = await Navigator.push<BillData>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BillLookupScreen(
+          ref: _cleanRef,
+          suffix: RefNumberFormatter.suffixOf(_ref.text, _cleanRef.length),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      if (bill != null) {
         _bill = bill;
         _manual = false;
         if (bill.readingDate != null) _day = bill.readingDate!.day;
-      });
-    } on BillException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
+      } else {
+        _error = 'Bill load nahi hua. Dobara "Find my bill" dabayein, ya last reading khud likhein.';
         _manual = true;
-      });
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+      }
+    });
   }
 
   bool get _canSave =>
