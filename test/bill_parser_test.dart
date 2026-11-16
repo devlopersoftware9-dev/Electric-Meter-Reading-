@@ -65,4 +65,28 @@ void main() {
     // Backspace right after a space removes the digit before it.
     expect(type('07 1', '07 ').text, '07');
   });
+
+  test('letters are allowed only as U/R at the end', () {
+    final f = RefNumberFormatter();
+    TextEditingValue type(String old, String text) => f.formatEditUpdate(
+        TextEditingValue(text: old, selection: TextSelection.collapsed(offset: old.length)),
+        TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length)));
+    expect(type('07 11234 1234567', '07 11234 1234567u').text, '07 11234 1234567 U');
+    expect(type('07 11234 1234567 U', '07 11234 1234567 ').text, '07 11234 1234567');
+    expect(type('07 1', '07 1a').text, '07 1');
+  });
+
+  test('finds reference number in bill OCR text', () {
+    expect(
+        OcrService.pickReference([
+          'LAHORE ELECTRIC SUPPLY COMPANY',
+          'CONNECTION DATE 12 MAR 2010',
+          'REFERENCE NO',
+          '07 11234 1234567 U',
+          'UNITS 230 AMOUNT 9800',
+        ]),
+        '07 11234 1234567 U');
+    expect(OcrService.pickReference(['Ref No: 07-11234-1234567']), '07 11234 1234567');
+    expect(OcrService.pickReference(['nothing here 1234']), isNull);
+  });
 }
